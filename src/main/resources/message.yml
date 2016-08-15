@@ -1,12 +1,26 @@
-
+# General
 no-access: '&4You do not have permission to this command.'
 player-not-found: '&6The user &4{name}&6 was not found.'
 failed: '&4Unable to transfer funds.'
-
+# Empty this string to remove the join message
+join-message:
+  unchanged: '&6You last visited on &7{since}&6.\n&6Your current balance is: {total}&6.'
+  increase: '&6You last visited on &7{since}&6.\nYour account increased by &2{diff}&6.\n&6Your current balance is: {total}&6.'
+  decrease: '&6You last visited on &7{since}&6.\nYour account reduced by &4{diff}&6.\n&6Your current balance is: {total}&6.'
+# Admin/Eco commands
 eco:
   usage: 'Usage: /eco <reload|give|take|reset> <name> [amount]'
   reloaded: '&6Eco plugin configuration reloaded.'
-
+set:
+  sent: '&6The account &f{name}&6 has been set to {amount}&6.'
+  received: '&6Your account balance is now {amount}&6.'
+give:
+  sent: '&6You have sent {amount}&6 to &f{name}&6.'
+  received: '&6You have received {amount}&6 from &f{name}&6.'
+take:
+  sent: '&6You have taken {amount}&6 from &f{name}&6.'
+  received: '&f{name}&6 has taken {amount}&6 from you.'
+# User commands
 bal:
   me: '&6You have &f{amount}&6 in your account.'
   other: '&6The user &f{name}&6 has &f{amount}&6.'
@@ -20,12 +34,3 @@ pay:
   received: '&6You have received {amount}&6 from &f{name}&6.'
   insufficient-funds: '&4You do not have that much.'
   not-yourself: '&4You can not pay yourself'
-set:
-  sent: '&6The account &f{name}&6 has been set to {amount}&6.'
-  received: '&6Your account balance is now {amount}&6.'
-give:
-  sent: '&6You have sent {amount}&6 to &f{name}&6.'
-  received: '&6You have received {amount}&6 from &f{name}&6.'
-take:
-  sent: '&6You have taken {amount}&6 from &f{name}&6.'
-  received: '&f{name}&6 has taken {amount}&6 from you.'

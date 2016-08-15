@@ -34,9 +34,14 @@ public class Database {
 	
 			set.close();
 	
-			query("CREATE TABLE IF NOT EXISTS `" + tbl_accounts + "` (" + "  `uuid` varchar(40) NOT NULL,"
-					+ "  `name` varchar(64) NOT NULL," + "  `money` double(10,2) NOT NULL DEFAULT '0.00',"
-					+ "  PRIMARY KEY (`uuid`)," + "  INDEX `account_byname` (`name`)"
+			query("CREATE TABLE IF NOT EXISTS `" + tbl_accounts + "` (" 
+					+ "  `uuid` varchar(40) NOT NULL,"
+					+ "  `name` varchar(64) NOT NULL," 
+					+ "  `money` double(10,2) NOT NULL DEFAULT '0.00',"
+					+ "  `lastseen` BIGINT NOT NULL DEFAULT '0',"
+					+ "  `lastbal` double(10,2) NOT NULL DEFAULT '0.00',"
+					+ "  PRIMARY KEY (`uuid`)," 
+					+ "  INDEX `account_byname` (`name`)"
 					+ ") ENGINE=InnoDB DEFAULT CHARSET=latin1;");
 	
 			query("CREATE TABLE IF NOT EXISTS `" + tbl_history + "` (" + "  `id` int(11) NOT NULL AUTO_INCREMENT,"
@@ -159,7 +164,7 @@ public class Database {
 	public List<Account> getTopAccounts(int size) {
 		checkConnection();
 
-		String sql = "SELECT name, uuid, money FROM " + tbl_accounts + " ORDER BY money DESC limit " + size;
+		String sql = "SELECT * FROM " + tbl_accounts + " ORDER BY money DESC limit " + size;
 
 		List<Account> topAccounts = new ArrayList<Account>();
 
@@ -167,10 +172,11 @@ public class Database {
 			ResultSet set = connection.createStatement().executeQuery(sql);
 
 			while (set.next()) {
-				Account account = new Account(set.getString("name"), UUID.fromString(set.getString("uuid")),
-						set.getDouble("money"));
+				Account account = new Account(set);
 				topAccounts.add(account);
 			}
+			
+			set.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -203,24 +209,22 @@ public class Database {
 
 		try {
 			PreparedStatement statement = connection
-					.prepareStatement("SELECT name, uuid, money FROM " + tbl_accounts + " WHERE name = ?;");
+					.prepareStatement("SELECT * FROM " + tbl_accounts + " WHERE name = ?;");
 			statement.setString(1, name);
 
 			ResultSet set = statement.executeQuery();
 			if (set.next()) {
-				result = new Account(set.getString("name"), UUID.fromString(set.getString("uuid")),
-						set.getDouble("money"));
+				result = new Account(set);
 			} else {
 				set.close();
 
 				statement = connection.prepareStatement(
-						"SELECT name, uuid, money FROM " + tbl_accounts + " WHERE name like ?;");
+						"SELECT * FROM " + tbl_accounts + " WHERE name like ?;");
 				statement.setString(1, name + '%');
 
 				set = statement.executeQuery();
 				if (set.next()) {
-					result = new Account(set.getString("name"), UUID.fromString(set.getString("uuid")),
-							set.getDouble("money"));
+					result = new Account(set);
 				}
 			}
 
@@ -243,13 +247,12 @@ public class Database {
 
 		try {
 			PreparedStatement statement = connection
-					.prepareStatement("SELECT name, uuid, money FROM " + tbl_accounts + " WHERE uuid = ?;");
+					.prepareStatement("SELECT * FROM " + tbl_accounts + " WHERE uuid = ?;");
 			statement.setString(1, uniqueId.toString());
 
 			ResultSet set = statement.executeQuery();
 			if (set.next()) {
-				result = new Account(set.getString("name"), UUID.fromString(set.getString("uuid")),
-						set.getDouble("money"));
+				result = new Account(set);
 			}
 
 			set.close();
@@ -259,6 +262,20 @@ public class Database {
 		}
 
 		return result;
+	}
+
+	public void storeAccountState(UUID uniqueId) {
+		checkConnection();
+		try {
+			PreparedStatement statement = connection.prepareStatement(
+					"UPDATE " + tbl_accounts + " SET lastbal = money, lastseen = ? WHERE uuid = ?;");
+			statement.setLong(1, System.currentTimeMillis());
+			statement.setString(2, uniqueId.toString());
+
+			statement.execute();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void transferFunds(Account account, Account receiver, double money) throws SQLException {
