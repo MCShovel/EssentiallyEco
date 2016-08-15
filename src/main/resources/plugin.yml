@@ -1,0 +1,50 @@
+name: EssentiallyEco
+main: com.steamcraftmc.EcoPlugin
+version: 1.0.0
+load: startup
+
+softdepend:
+- Vault
+
+commands:
+  eco:
+    aliases: [economy]
+    usage: /<command> <reload|give|take|reset> <name> [amount]
+    description: Manage the economy or a players balance.
+    permission: essentials.eco
+    permission-message: '§4You do not have permission to perform this action.'
+  balance:
+    aliases: [bal, money]
+    usage: /<command> [player]
+    description: Checks your balance or another player's balance.
+    permission: essentials.balance
+    permission-message: '§4You do not have permission to perform this action.'
+  balancetop:
+    aliases: [baltop]
+    usage: /<command>
+    description: Displays the top account balances.
+    permission: essentials.balancetop
+    permission-message: '§4You do not have permission to perform this action.'
+  pay:
+    aliases: []
+    usage: /<command> <player> <amount>
+    description: Pays a specified player from your balance.
+    permission: essentials.pay
+    permission-message: '§4You do not have permission to perform this action.'
+
+permissions:
+  essentials.balance:
+    description: Allow access to the /balance command.
+    default: true
+  essentials.balance.other:
+    description: Allows you to see the balance of other players.
+    default: true
+  essentials.balancetop:
+    description: Allow access to the /balancetop command.
+    default: true
+  essentials.pay:
+    description: Allow access to the /pay command.
+    default: true
+  essentials.eco:
+    description: Allow economy admin access to the /eco command
+    default: op

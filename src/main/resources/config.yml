@@ -1,0 +1,28 @@
+#EssentiallyEco v1.0 - Configuration File
+
+#Mysql Required configuration...
+mysql:
+  host: localhost
+  port: 3306
+  user: root
+  password: password
+  database: economy
+  tableprefix: eco_
+
+settings:
+  defaulttop: 10
+  prefix: '&0[&6Economy&0] &r'
+
+balance:
+  initial: 100.0
+  min: 0.0
+  max: 2147483647.0
+
+currency:
+  prefix: '&a$'
+  major:
+    singular: Crown
+    plural: Crowns
+  minor:
+    singular: Silver
+    plural: Silvers
