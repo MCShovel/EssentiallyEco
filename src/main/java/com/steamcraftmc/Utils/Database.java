@@ -7,9 +7,15 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
+
+import org.bukkit.Location;
+import org.bukkit.entity.Player;
 
 public class Database {
 	private final EcoPlugin plugin;
@@ -28,36 +34,34 @@ public class Database {
 		try {
 			if (!checkConnection())
 				return false;
-			
+
 			ResultSet set = connection.prepareStatement("SHOW TABLES LIKE '" + tbl_accounts + "'").executeQuery();
 			boolean newDatabase = set.next();
-	
+
 			set.close();
-	
-			query("CREATE TABLE IF NOT EXISTS `" + tbl_accounts + "` (" 
-					+ "  `uuid` varchar(40) NOT NULL,"
-					+ "  `name` varchar(64) NOT NULL," 
-					+ "  `money` double(10,2) NOT NULL DEFAULT '0.00',"
-					+ "  `lastseen` BIGINT NOT NULL DEFAULT '0',"
-					+ "  `lastbal` double(10,2) NOT NULL DEFAULT '0.00',"
-					+ "  PRIMARY KEY (`uuid`)," 
-					+ "  INDEX `account_byname` (`name`)"
+
+			query("CREATE TABLE IF NOT EXISTS `" + tbl_accounts + "` (" + "  `uuid` varchar(40) NOT NULL,"
+					+ "  `name` varchar(64) NOT NULL," + "  `money` double(10,2) NOT NULL DEFAULT '0.00',"
+					+ "  `lastseen` BIGINT NOT NULL DEFAULT '0'," + "  `lastbal` double(10,2) NOT NULL DEFAULT '0.00',"
+					+ "  PRIMARY KEY (`uuid`)," + "  INDEX `account_byname` (`name`)"
 					+ ") ENGINE=InnoDB DEFAULT CHARSET=latin1;");
-	
+
 			query("CREATE TABLE IF NOT EXISTS `" + tbl_history + "` (" + "  `id` int(11) NOT NULL AUTO_INCREMENT,"
-					+ "  `uuid` varchar(36) NOT NULL," + "  `payee` varchar(36) DEFAULT NULL,"
-					+ "  `amtChange` double NOT NULL," + "  `locX` int(11) DEFAULT NULL,"
-					+ "  `locY` int(11) DEFAULT NULL," + "  `locZ` int(11) DEFAULT NULL,"
-					+ "  `locYaw` float(4,3) DEFAULT NULL," + "  `locPitch` float(4,3) DEFAULT NULL,"
-					+ "  `unixTime` bigint(20) DEFAULT NULL," + "  PRIMARY KEY (`id`),"
-					+ "  INDEX history_byuser (uuid, unixTime)" + ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
-	
+					+ "  `uuid` varchar(36) NOT NULL," + "  `action` varchar(36) NOT NULL,"
+					+ "  `payee` varchar(36) DEFAULT NULL," + "  `amtChange` double NOT NULL,"
+					+ "  `newBalance` double NOT NULL," + "  `world` varchar(36) DEFAULT NULL,"
+					+ "  `locX` int(11) DEFAULT NULL," + "  `locY` int(11) DEFAULT NULL,"
+					+ "  `locZ` int(11) DEFAULT NULL," + "  `locYaw` float DEFAULT NULL,"
+					+ "  `locPitch` float DEFAULT NULL," + "  `unixTime` bigint(20) DEFAULT NULL,"
+					+ "  PRIMARY KEY (`id`)," + "  INDEX history_byuser (uuid, unixTime)"
+					+ ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
+
 			query("CREATE TABLE IF NOT EXISTS `" + tbl_version + "` (" + "  `version` int NOT NULL"
 					+ ") ENGINE=InnoDB DEFAULT CHARSET=latin1;");
-	
+
 			if (newDatabase) {
 				int version = getVersion();
-	
+
 				if (version == 0) {
 					setVersion(1);
 				}
@@ -103,7 +107,7 @@ public class Database {
 		String user = plugin.Config.get("mysql.user", "root");
 		String password = plugin.Config.get("mysql.password", "password");
 		String database = plugin.Config.get("mysql.database", "economy");
-				
+
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
 			String url = "jdbc:mysql://" + host + ":" + port + "/" + database;
@@ -175,7 +179,7 @@ public class Database {
 				Account account = new Account(set);
 				topAccounts.add(account);
 			}
-			
+
 			set.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -218,8 +222,7 @@ public class Database {
 			} else {
 				set.close();
 
-				statement = connection.prepareStatement(
-						"SELECT * FROM " + tbl_accounts + " WHERE name like ?;");
+				statement = connection.prepareStatement("SELECT * FROM " + tbl_accounts + " WHERE name like ?;");
 				statement.setString(1, name + '%');
 
 				set = statement.executeQuery();
@@ -267,8 +270,8 @@ public class Database {
 	public void storeAccountState(UUID uniqueId) {
 		checkConnection();
 		try {
-			PreparedStatement statement = connection.prepareStatement(
-					"UPDATE " + tbl_accounts + " SET lastbal = money, lastseen = ? WHERE uuid = ?;");
+			PreparedStatement statement = connection
+					.prepareStatement("UPDATE " + tbl_accounts + " SET lastbal = money, lastseen = ? WHERE uuid = ?;");
 			statement.setLong(1, System.currentTimeMillis());
 			statement.setString(2, uniqueId.toString());
 
@@ -278,18 +281,77 @@ public class Database {
 		}
 	}
 
+	private void historyRecord(final Account accountFrom, final Account accountTo, final String action,
+			final double amount) {
+		plugin.getServer().getScheduler().runTask(plugin, new Runnable() {
+			@Override
+			public void run() {
+				try {
+					checkConnection();
+					PreparedStatement statement;
+
+					statement = connection.prepareStatement("INSERT INTO " + tbl_history
+							+ "(`unixTime`,`uuid`,`action`,`amtChange`,`newBalance`,`payee`,`world`,`locX`,`locY`,`locZ`,`locYaw`,`locPitch`)"
+							+ "VALUES( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? );");
+					int ix = 0;
+					statement.setLong(++ix, System.currentTimeMillis());
+					statement.setString(++ix, accountFrom.Uuid.toString());
+					statement.setString(++ix, action);
+					statement.setDouble(++ix, amount);
+					statement.setDouble(++ix, accountFrom.Amount);
+					if (accountTo == null) {
+						statement.setNull(++ix, java.sql.Types.VARCHAR);
+					} else {
+						statement.setString(++ix, accountTo.Uuid.toString());
+					}
+					Player player = plugin.getServer().getPlayer(accountFrom.Uuid);
+					if (player != null) {
+						Location loc = player.getLocation();
+						DecimalFormatSymbols formatSymbols = new DecimalFormatSymbols(Locale.ENGLISH);
+						formatSymbols.setDecimalSeparator('.');
+						DecimalFormat df = new DecimalFormat("###0.000", formatSymbols);
+
+						statement.setString(++ix, loc.getWorld().getName());
+						statement.setInt(++ix, loc.getBlockX());
+						statement.setInt(++ix, loc.getBlockY());
+						statement.setInt(++ix, loc.getBlockZ());
+						statement.setString(++ix, df.format(loc.getYaw()));
+						statement.setString(++ix, df.format(loc.getPitch()));
+					} else {
+						statement.setNull(++ix, java.sql.Types.VARCHAR);
+						statement.setNull(++ix, java.sql.Types.INTEGER);
+						statement.setNull(++ix, java.sql.Types.INTEGER);
+						statement.setNull(++ix, java.sql.Types.INTEGER);
+						statement.setNull(++ix, java.sql.Types.DOUBLE);
+						statement.setNull(++ix, java.sql.Types.DOUBLE);
+					}
+
+					statement.execute();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
 	public void transferFunds(Account account, Account receiver, double money) throws SQLException {
-		addRemoveFunds(account, -money);
+		account = internalAddRemoveFunds(account, -money);
 		try {
-			addRemoveFunds(receiver, money);
-		}
-		catch(SQLException e) {
-			addRemoveFunds(account, money);
+			receiver = internalAddRemoveFunds(receiver, money);
+			historyRecord(account, receiver, "payer", -money);
+			historyRecord(receiver, account, "payee", money);
+		} catch (SQLException e) {
+			account = internalAddRemoveFunds(account, money);
 			throw e;
 		}
 	}
 
 	public void addRemoveFunds(Account account, double money) throws SQLException {
+		account = internalAddRemoveFunds(account, money);
+		historyRecord(account, null, "adjust", money);
+	}
+
+	private Account internalAddRemoveFunds(Account account, double money) throws SQLException {
 		checkConnection();
 
 		try {
@@ -303,6 +365,8 @@ public class Database {
 			if (1 != statement.executeUpdate()) {
 				throw new SQLException("Insufficient funds");
 			}
+			
+			return account.add(money);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw e;
@@ -311,7 +375,6 @@ public class Database {
 
 	public void setBalance(Account account, double money) throws SQLException {
 		checkConnection();
-
 		try {
 			PreparedStatement statement = connection
 					.prepareStatement("UPDATE " + tbl_accounts + " SET money = ? WHERE uuid = ?;");
@@ -319,6 +382,8 @@ public class Database {
 			statement.setDouble(1, money);
 			statement.setString(2, account.Uuid.toString());
 			statement.execute();
+
+			historyRecord(account.set(money), null, "reset", money);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw e;
