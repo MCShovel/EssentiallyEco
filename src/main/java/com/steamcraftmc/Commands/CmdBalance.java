@@ -25,7 +25,7 @@ public class CmdBalance extends BaseCommand {
 				return true;
 			}
 
-			sender.sendMessage(plugin.Message.format("bal.other", "&6The user &f{amount}&6 has &f{name}&6.",
+			sender.sendMessage(plugin.Message.format("bal.other", "&6The user &f{name}&6 has &f{amount}&6.",
 							"name", account.Name, "amount", plugin.Config.format(account.Amount)));
 		} else if (sender instanceof Player) {
 			Player player = (Player)sender;

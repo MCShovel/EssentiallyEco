@@ -1,0 +1,31 @@
+
+no-access: '&4You do not have permission to this command.'
+player-not-found: '&6The user &4{name}&6 was not found.'
+failed: '&4Unable to transfer funds.'
+
+eco:
+  usage: 'Usage: /eco <reload|give|take|reset> <name> [amount]'
+  reloaded: '&6Eco plugin configuration reloaded.'
+
+bal:
+  me: '&6You have &f{amount}&6 in your account.'
+  other: '&6The user &f{name}&6 has &f{amount}&6.'
+  no-name: '&4You must supply a player name.'
+baltop:
+  head: '&6==================== TOP PLAYERS ===================='
+  list: '&6{name}&7 - &f{amount}'
+  foot: '&6===================================================='
+pay:
+  sent: '&6You have sent {amount}&6 to &f{name}&6.'
+  received: '&6You have received {amount}&6 from &f{name}&6.'
+  insufficient-funds: '&4You do not have that much.'
+  not-yourself: '&4You can not pay yourself'
+set:
+  sent: '&6The account &f{name}&6 has been set to {amount}&6.'
+  received: '&6Your account balance is now {amount}&6.'
+give:
+  sent: '&6You have sent {amount}&6 to &f{name}&6.'
+  received: '&6You have received {amount}&6 from &f{name}&6.'
+take:
+  sent: '&6You have taken {amount}&6 from &f{name}&6.'
+  received: '&f{name}&6 has taken {amount}&6 from you.'

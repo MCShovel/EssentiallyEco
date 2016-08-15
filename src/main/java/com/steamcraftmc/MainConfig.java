@@ -13,20 +13,8 @@ public class MainConfig extends com.steamcraftmc.Utils.BaseYamlSettingsFile {
 		return getInt("settings.defaulttop", 10);
 	}
 
-	public String getMessagePrefix() {
-		return get("settings.prefix", "&0[&6Economy&0] &r");
-	}
-	
 	public double getInitialBalance() {
 		return getDouble("balance.initial", 0.0);
-	}
-
-	public double getMinBal() {
-		return getDouble("balance.min", 0.0);
-	}
-
-	public double getMaxBal() {
-		return getDouble("balance.max", Integer.MAX_VALUE);
 	}
 
 	public String getPrefix() {
@@ -58,13 +46,20 @@ public class MainConfig extends com.steamcraftmc.Utils.BaseYamlSettingsFile {
 	}
 
 	private String formatValue(double value) {
-		boolean isWholeNumber = value == Math.round(value);
-
 		DecimalFormatSymbols formatSymbols = new DecimalFormatSymbols(Locale.ENGLISH);
-
 		formatSymbols.setDecimalSeparator('.');
 
-		String pattern = isWholeNumber ? "###,###.###" : "###,##0.00";
+		String pattern = "###,###,##0";
+
+		int digits = getMinorDigits();
+		boolean isWholeNumber = value == Math.round(value);
+
+		if (digits > 0 && !isWholeNumber) {
+			pattern += '.';
+			for (int ix = 0; ix < digits; ix++) {
+				pattern += '0';
+			}
+		}
 
 		DecimalFormat df = new DecimalFormat(pattern, formatSymbols);
 
@@ -72,23 +67,31 @@ public class MainConfig extends com.steamcraftmc.Utils.BaseYamlSettingsFile {
 	}
 
 	public String format(double amount) {
-		long lamount = (long) (amount * 100);
+		long digitpow = (long)Math.pow(10.0, (double)getMinorDigits());
+		long lamount = (long) (amount * digitpow);
 
 		String suffix = "";
 
-		if (hasMinorName() && lamount > 0 && lamount < 100) {
-			if (amount == 1) {
+		if (hasMinorName() && lamount > 0 && lamount < digitpow) {
+			if (lamount == 1) {
 				suffix += ' ' + getMinorSigular();
-			} else if (amount < 1.0) {
+			} else {
 				suffix += ' ' + getMinorPlural();
 			}
-		} else if (amount == 100) {
-			suffix += getMajorSigular();
+			amount = (double)lamount;
+		} else if (lamount == digitpow) {
+			suffix += ' ' + getMajorSigular();
 		} else {
-			suffix += getMajorPlural();
+			suffix += ' ' + getMajorPlural();
 		}
 
 		return getPrefix() + formatValue(amount) + suffix;
+	}
+
+	public double floor(double amount) {
+		long digitpow = (long)Math.pow(10.0, (double)getMinorDigits());
+		long lamount = (long) (amount * digitpow);
+		return (double)lamount / digitpow;
 	}
 
 }

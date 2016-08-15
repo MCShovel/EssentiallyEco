@@ -53,6 +53,7 @@ public class VaultHandler implements Economy {
 
 	@Override
 	public String format(double amount) {
+		amount = plugin.Config.floor(amount);
 		return ChatColor.stripColor(plugin.Config.format(amount));
 	}
 
@@ -305,8 +306,7 @@ public class VaultHandler implements Economy {
 
 				if (plugin != null && plugin.isEnabled()) {
 					VaultHandler.this.isEnabled = true;
-					VaultHandler.this.plugin.log(Level.INFO,
-							VaultHandler.this.plugin.Config.getPrefix() + "Vault support enabled.");
+					VaultHandler.this.plugin.log(Level.INFO, "Vault support enabled.");
 				}
 			}
 		}
@@ -316,8 +316,7 @@ public class VaultHandler implements Economy {
 			if (plugin != null) {
 				VaultHandler.this.isEnabled = false;
 				if (event.getPlugin().getDescription().getName().equals(EcoName)) {
-					VaultHandler.this.plugin.log(Level.INFO,
-							VaultHandler.this.plugin.Config.getPrefix() + "Vault support disabled.");
+					VaultHandler.this.plugin.log(Level.INFO, "Vault support disabled.");
 				}
 			}
 		}

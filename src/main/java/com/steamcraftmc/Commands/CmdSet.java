@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 
 public class CmdSet extends BaseCommand {
 	public CmdSet(EcoPlugin plugin) {
-		super(plugin, "set", "essentials.eco", 2);
+		super(plugin, "reset,set", "essentials.eco", 2);
 	}
 
 	@Override
@@ -22,10 +22,13 @@ public class CmdSet extends BaseCommand {
 
 		try {
 			money = Double.parseDouble(args[1]);
+			money = plugin.Config.floor(money);
 		} catch (NumberFormatException e) {
 			return false;
 		}
 
+		money = Math.max(0, money);
+		
 		Account account = plugin.Database.getAccountByName(args[0]);
 
 		if (account == null) {
@@ -36,17 +39,18 @@ public class CmdSet extends BaseCommand {
 		try {
 			plugin.Database.setBalance(account, money);
 		} catch (Exception e) {
-			sender.sendMessage(plugin.Message.get("pay.failed", "&4Unable to transfer funds."));
+			e.printStackTrace();
+			sender.sendMessage(plugin.Message.getFailed());
 			return true;
 		}
 
 		String txtAmount = plugin.Config.format(money);
-		sender.sendMessage(plugin.Message.format("pay.sent", "&6You have sent {amount}&6 to &f{name}&6.", "name",
+		sender.sendMessage(plugin.Message.format("set.sent", "&6The account &f{name}&6 has been set to {amount}&6.", "name",
 				account.Name, "amount", txtAmount));
 
 		Player receiverPlayer = plugin.getServer().getPlayer(account.Uuid);
 		if (receiverPlayer != null) {
-			receiverPlayer.sendMessage(plugin.Message.format("pay.sent", "&6You have received {amount}&6 from &f{name}&6.",
+			receiverPlayer.sendMessage(plugin.Message.format("set.received", "&6Your account balance is now {amount}&6.",
 					"name", sender.getName(), "amount", txtAmount));
 		}
 		return true;

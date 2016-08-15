@@ -11,18 +11,17 @@ mysql:
 
 settings:
   defaulttop: 10
-  prefix: '&0[&6Economy&0] &r'
 
 balance:
   initial: 100.0
-  min: 0.0
-  max: 2147483647.0
 
 currency:
-  prefix: '&a$'
+  prefix: '&7$&f'
   major:
-    singular: Crown
-    plural: Crowns
+    singular: dollar
+    plural: dollars
   minor:
-    singular: Silver
-    plural: Silvers
+    enabled: true
+    digits: 2
+    singular: cent
+    plural: cents

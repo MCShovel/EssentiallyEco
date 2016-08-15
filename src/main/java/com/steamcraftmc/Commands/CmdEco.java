@@ -4,69 +4,40 @@ import com.steamcraftmc.EcoPlugin;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
+import java.util.TreeMap;
+import java.util.Map;
 
 public class CmdEco extends BaseCommand {
-	private final List<BaseCommand> commands;
+	private final Map<String, BaseCommand> commands;
 
 	public CmdEco(EcoPlugin plugin) {
 		super(plugin, "eco", "essentials.eco", 1);
-		
-		commands = new ArrayList<BaseCommand>();
-		commands.add(new CmdPay(plugin));
-		commands.add(new CmdBalance(plugin));
-		commands.add(new CmdBalanceTop(plugin));
-		commands.add(new CmdGive(plugin));
-		commands.add(new CmdTake(plugin));
-		commands.add(new CmdSet(plugin));
-		commands.add(new CmdReload(plugin));
+
+		new CmdPay(plugin);
+		new CmdBalance(plugin);
+		new CmdBalanceTop(plugin);
+		commands = new TreeMap<String, BaseCommand>(String.CASE_INSENSITIVE_ORDER);
+		addCommand(new CmdGive(plugin));
+		addCommand(new CmdTake(plugin));
+		addCommand(new CmdSet(plugin));
+		addCommand(new CmdReload(plugin));
+	}
+
+	private void addCommand(BaseCommand cmd) {
+		String[] aliases = cmd.getName().split(",");
+		for (String alias : aliases) {
+			commands.put(alias, cmd);
+		}
 	}
 
 	private BaseCommand getCommand(String name) {
-		for (BaseCommand command : commands) {
-			String[] aliases = command.getName().split(",");
-
-			for (String alias : aliases) {
-				if (alias.equalsIgnoreCase(name)) {
-					return command;
-				}
-			}
-		}
-
-		return null;
-	}
-
-	private String[] merge(String[]... arrays) {
-		int arraySize = 0;
-
-		for (String[] array : arrays) {
-			arraySize += array.length;
-		}
-
-		String[] result = new String[arraySize];
-
-		int j = 0;
-
-		for (String[] array : arrays) {
-			for (String string : array) {
-				result[j++] = string;
-			}
-		}
-
-		return result;
+		return commands.get(name);
 	}
 
 	private void sendDefaultCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
-		String command = "balance";
-
-		if (!(sender instanceof Player) && args.length < 1) {
-			command = "help";
-		}
-
-		onCommand(sender, cmd, commandLabel, merge(new String[] { command }, args));
+		onCommand(sender, cmd, commandLabel, new String[] { "help" });
 	}
 
 	@Override
@@ -79,20 +50,16 @@ public class CmdEco extends BaseCommand {
 		BaseCommand command = getCommand(args[0]);
 
 		if (command == null) {
-			sendDefaultCommand(sender, cmd, commandLabel, args);
-			return true;
+			return false;
 		}
-
-		String[] realArgs = new String[args.length - 1];
-
-		for (int i = 1; i < args.length; i++) {
-			realArgs[i - 1] = args[i];
-		}
-
+		
+		String[] realArgs = Arrays.copyOfRange(args, 1, args.length);
 		if (!command.onCommand(sender, cmd, commandLabel, realArgs)) {
-			sender.sendMessage(plugin.Message.get("eco.usage", "Usage: /eco <reload|give|take|reset> <name> [amount]"));
+			return false;
 		}
 
 		return true;
 	}
+	
+	
 }

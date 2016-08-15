@@ -27,6 +27,7 @@ public class CmdPay extends BaseCommand {
 
 		try {
 			money = Double.parseDouble(args[1]);
+			money = plugin.Config.floor(money);
 		} catch (NumberFormatException e) {
 			return false;
 		}
@@ -44,6 +45,11 @@ public class CmdPay extends BaseCommand {
 
 		Account account = plugin.Database.getAccount(player.getUniqueId());
 
+		if (account.Uuid.equals(receiver.Uuid)) {
+			sender.sendMessage(plugin.Message.get("pay.not-yourself", "&4You can not pay yourself."));
+			return true;
+		}
+
 		if (account.Amount < money) {
 			sender.sendMessage(plugin.Message.get("pay.insufficient-funds", "&4You do not have that much."));
 			return true;
@@ -52,7 +58,8 @@ public class CmdPay extends BaseCommand {
 		try {
 			plugin.Database.transferFunds(account, receiver, money);
 		} catch (Exception e) {
-			sender.sendMessage(plugin.Message.get("pay.failed", "&4Unable to transfer funds."));
+			e.printStackTrace();
+			sender.sendMessage(plugin.Message.getFailed());
 			return true;
 		}
 
@@ -62,7 +69,7 @@ public class CmdPay extends BaseCommand {
 
 		Player receiverPlayer = plugin.getServer().getPlayer(receiver.Uuid);
 		if (receiverPlayer != null) {
-			receiverPlayer.sendMessage(plugin.Message.format("pay.sent", "&6You have received {amount}&6 from &f{name}&6.",
+			receiverPlayer.sendMessage(plugin.Message.format("pay.received", "&6You have received {amount}&6 from &f{name}&6.",
 					"name", account.Name, "amount", txtAmount));
 		}
 

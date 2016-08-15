@@ -7,7 +7,7 @@ import org.bukkit.command.CommandSender;
 
 public class CmdReload extends BaseCommand {
 	public CmdReload(EcoPlugin plugin) {
-		super(plugin, "reload", "essentials.eco", 2);
+		super(plugin, "reload", "essentials.eco", 0);
 	}
 
 	@Override

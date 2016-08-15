@@ -36,7 +36,7 @@ public class Database {
 	
 			query("CREATE TABLE IF NOT EXISTS `" + tbl_accounts + "` (" + "  `uuid` varchar(40) NOT NULL,"
 					+ "  `name` varchar(64) NOT NULL," + "  `money` double(10,2) NOT NULL DEFAULT '0.00',"
-					+ "  PRIMARY KEY (`uuid`)," + "  INDEX `fe_account_byname` (`name`)"
+					+ "  PRIMARY KEY (`uuid`)," + "  INDEX `account_byname` (`name`)"
 					+ ") ENGINE=InnoDB DEFAULT CHARSET=latin1;");
 	
 			query("CREATE TABLE IF NOT EXISTS `" + tbl_history + "` (" + "  `id` int(11) NOT NULL AUTO_INCREMENT,"
@@ -45,7 +45,7 @@ public class Database {
 					+ "  `locY` int(11) DEFAULT NULL," + "  `locZ` int(11) DEFAULT NULL,"
 					+ "  `locYaw` float(4,3) DEFAULT NULL," + "  `locPitch` float(4,3) DEFAULT NULL,"
 					+ "  `unixTime` bigint(20) DEFAULT NULL," + "  PRIMARY KEY (`id`),"
-					+ "  INDEX fe_history_byuser (uuid, unixTime)" + ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
+					+ "  INDEX history_byuser (uuid, unixTime)" + ") ENGINE=MyISAM DEFAULT CHARSET=latin1;");
 	
 			query("CREATE TABLE IF NOT EXISTS `" + tbl_version + "` (" + "  `version` int NOT NULL"
 					+ ") ENGINE=InnoDB DEFAULT CHARSET=latin1;");
@@ -89,7 +89,7 @@ public class Database {
 		close();
 
 		String prefix = plugin.Config.get("mysql.tableprefix", "eco_");
-		tbl_accounts = prefix + "_accounts";
+		tbl_accounts = prefix + "accounts";
 		tbl_history = prefix + "history";
 		tbl_version = prefix + "version";
 
@@ -139,7 +139,6 @@ public class Database {
 			return version;
 		} catch (Exception e) {
 			e.printStackTrace();
-
 			return version;
 		}
 	}
@@ -215,8 +214,8 @@ public class Database {
 				set.close();
 
 				statement = connection.prepareStatement(
-						"SELECT name, uuid, money FROM " + tbl_accounts + " WHERE name like ? + '%';");
-				statement.setString(1, name);
+						"SELECT name, uuid, money FROM " + tbl_accounts + " WHERE name like ?;");
+				statement.setString(1, name + '%');
 
 				set = statement.executeQuery();
 				if (set.next()) {

@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 
 public class CmdTake extends BaseCommand {
 	public CmdTake(EcoPlugin plugin) {
-		super(plugin, "deduct", "essentials.eco", 2);
+		super(plugin, "take", "essentials.eco", 2);
 	}
 
 	@Override
@@ -22,6 +22,7 @@ public class CmdTake extends BaseCommand {
 
 		try {
 			money = 0.0 - Double.parseDouble(args[1]);
+			money = plugin.Config.floor(money);
 		} catch (NumberFormatException e) {
 			return false;
 		}
@@ -36,17 +37,18 @@ public class CmdTake extends BaseCommand {
 		try {
 			plugin.Database.addRemoveFunds(account, money);
 		} catch (Exception e) {
-			sender.sendMessage(plugin.Message.get("pay.failed", "&4Unable to transfer funds."));
+			e.printStackTrace();
+			sender.sendMessage(plugin.Message.getFailed());
 			return true;
 		}
 
-		String txtAmount = plugin.Config.format(money);
-		sender.sendMessage(plugin.Message.format("pay.sent", "&6You have sent {amount}&6 to &f{name}&6.", "name",
+		String txtAmount = plugin.Config.format(-money);
+		sender.sendMessage(plugin.Message.format("take.sent", "&6You have taken {amount}&6 from &f{name}&6.", "name",
 				account.Name, "amount", txtAmount));
 
 		Player receiverPlayer = plugin.getServer().getPlayer(account.Uuid);
 		if (receiverPlayer != null) {
-			receiverPlayer.sendMessage(plugin.Message.format("pay.sent", "&6You have received {amount}&6 from &f{name}&6.",
+			receiverPlayer.sendMessage(plugin.Message.format("take.received", "&f{name}&6 has taken {amount}&6 from you.",
 					"name", sender.getName(), "amount", txtAmount));
 		}
 		return true;
