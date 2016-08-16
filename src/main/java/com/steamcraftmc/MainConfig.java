@@ -21,6 +21,10 @@ public class MainConfig extends com.steamcraftmc.Utils.BaseYamlSettingsFile {
 		return get("currency.prefix", "&7$&f");
 	}
 
+	public String getSuffix() {
+		return get("currency.suffix", "");
+	}
+
 	public String getMajorSigular() {
 		return get("currency.major.singular", "dollar");
 	}
@@ -70,7 +74,7 @@ public class MainConfig extends com.steamcraftmc.Utils.BaseYamlSettingsFile {
 		long digitpow = (long)Math.pow(10.0, (double)getMinorDigits());
 		long lamount = (long) (amount * digitpow);
 
-		String suffix = "";
+		String suffix = getSuffix() + "";
 
 		if (hasMinorName() && lamount > 0 && lamount < digitpow) {
 			if (lamount == 1) {

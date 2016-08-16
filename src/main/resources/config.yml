@@ -17,6 +17,7 @@ balance:
 
 currency:
   prefix: '&7$&f'
+  suffix: ''
   major:
     singular: dollar
     plural: dollars
